@@ -36,7 +36,8 @@ fn problem2(lines: &[&str]) -> i32 {
         .enumerate()
         .flat_map(|(r, row)| {
             row.iter().enumerate().filter(move |(c, char)|{
-                if (*char).eq(&'A') && r >= 1 && r < n-1 && *c >= 1 && *c < m-1 {                let one: bool = (grid[r-1][c-1] == 'M' && grid[r+1][c+1] == 'S') || (grid[r-1][c-1] == 'S' && grid[r+1][c+1] == 'M');
+                if (*char).eq(&'A') && r >= 1 && r < n-1 && *c >= 1 && *c < m-1 {                
+                let one: bool = (grid[r-1][c-1] == 'M' && grid[r+1][c+1] == 'S') || (grid[r-1][c-1] == 'S' && grid[r+1][c+1] == 'M');
                 let two: bool = (grid[r-1][c+1] == 'M' && grid[r+1][c-1] == 'S') || (grid[r-1][c+1] == 'S' && grid[r+1][c-1] == 'M');
                 return one && two;
                 } else {
