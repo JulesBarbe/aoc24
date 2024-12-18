@@ -1,121 +1,122 @@
+from collections import defaultdict
 import copy
 
-def problem1(merp):
+def next_pos(row, col, direction):
+    match direction:
+        case '^':
+            return (row-1, col)
+        case '>':
+            return (row, col+1)
+        case 'v':
+            return (row+1, col)
+        case '<':
+            return (row, col-1)
+
+def turn(direction):
+    match direction:
+        case '^':
+            return ('>')
+        case '>':
+            return ('v')
+        case 'v':
+            return ('<')
+        case '<':
+            return ('^')
+        
+def map_symbol(previous_dirs, curr_dir):
+    if curr_dir in ('^', 'v'):
+        return '+' if ('>' in previous_dirs or '<' in previous_dirs) else '|'
+    else:
+        return '+' if ('^' in previous_dirs or 'v' in previous_dirs) else '-'
+        
+def curr_pos_loops(start_row, start_col, start_dir, map, max_row, max_col, obst_row, obst_col):
+    curr_dir = turn(start_dir)
+    row, col = start_row, start_col
+    travels = defaultdict(set)
+    debug_map = copy.deepcopy(merp)
+    debug_map[obst_row][obst_col] = 'O'
+    while True:
+        debug_map[row][col] = curr_dir
+        if curr_dir in travels[(row, col)] or (row, col, curr_dir) == (start_row, start_col, start_dir):
+            print(f"Found loop with obstacle at {obst_row}, {obst_col}")
+            with open('debug_map.txt', 'w') as file:
+                s = ""
+                for l in debug_map:
+                    s += ''.join(l) + '\n'
+                file.write(s)
+            return True
+        travels[(row, col)].add(curr_dir)
+        next_row, next_col = next_pos(row, col, curr_dir)
+        if next_row < 0 or next_col < 0 or next_row >= max_row or next_col >= max_col:
+            return False
+        if map[next_row][next_col] == '#' or (next_row, next_col) == (obst_row, obst_col):
+            row, col, curr_dir = row, col, turn(curr_dir)
+        else:
+            row, col = next_row, next_col
+
+def solve(merp):
     n = len(merp)
-    m = len(merp[0])
-    row, col = 0, 0
+    m = len(merp)
+    start_row, start_col = 0, 0 
+    travels = defaultdict(set)
+    guard_path = []
+
+    # find starting position
     for r in range(n):
         for c in range(m):
             if merp[r][c] == '^':
-                row, col = r, c
-    encountered = {}
-    count = 1
-    count2 = 0
-    merp2 = copy.deepcopy(merp)
-    p = '^'
-    while 0 <= row < n and 0 <= col < m:
-        if merp[row][col] == '.':
-            count += 1
-        match p:
-            case '^':
-                if row > 0 and merp[row-1][col] == '#':
-                    merp[row][col] = '+'
-                    p = '>'
-                    encountered[(col, '^')] = row - 1
-                    col += 1
-                else:
-                    if (row, '>') in encountered:
-                        hitcol = encountered[(row, '>')]
-                        curcol = col
-                        print(f"v point {(row, col)}, going to hitrow {hitrow}")
-                        while curcol < hitcol:
-                            if merp[row][curcol] == '#':
-                                break
-                            curcol += 1
-                        else:
-                            merp2[row-1][col] = 'O'
-                            count2 += 1
-                    merp[row][col] = '|'
-                    row -= 1
-            case '>':
-                if col < m-1 and merp[row][col+1] == '#':
-                    merp[row][col] = '+'
-                    p = 'v'
-                    encountered[(row, '>')] = col + 1
-                    row += 1
-                else:
-                    if (col, 'v') in encountered:
-                        hitrow = encountered[(col, 'v')]
-                        currow = row
-                        print(f"v point {(row, col)}, going to hitrow {hitrow}")
-                        while currow < hitrow:
-                            if merp[currow][col] == '#':
-                                break
-                            currow += 1
-                        else:
-                            merp2[row][col+1] = 'O'
-                            count2 += 1
-                    merp[row][col] = '-'
-                    col += 1
-            case 'v':
-                if row < n-1 and merp[row+1][col] == '#':
-                    merp[row][col] = '+'
-                    p = '<'
-                    encountered[(col, 'v')] = row + 1
-                    col -= 1
-                else:
-                    if (row, '<') in encountered:
-                        hitcol = encountered[(row, '<')]
-                        curcol = col
-                        print(f"< point {(row, col)}, going to hitrow {hitrow}")
-                        while curcol > hitcol:
-                            if merp[row][curcol] == '#':
-                                break
-                            curcol -= 1
-                        else:
-                            merp2[row+1][col] = 'O'
-                            count2 += 1
+                start_row, start_col = r, c
+                merp[r][c] = '.'
 
-                    merp[row][col] = '|'
-                    row += 1
-            case '<':
-                if col > 0 and merp[row][col-1] == '#':
-                    merp[row][col] = '+'
-                    p = '^'
-                    encountered[(row, '<')] = col - 1
-                    row -= 1
-                else:
-                    if (col, '^') in encountered:
-                        hitrow = encountered[(col, '^')]
-                        currow = row
-                        print(f"^ point {(row, col)}, going to hitrow {hitrow}")
-                        while currow > hitrow:
-                            if merp[currow][col] == '#':
-                                break
-                            currow -= 1
-                        else:
-                            merp2[row][col-1] = 'O'
-                            count2 += 1
-                    merp[row][col] = '-'
-                    col -= 1
+    # simulate guard path 
+    row, col, curr_dir = start_row, start_col, '^'
+    while True:
+        guard_path.append((row, col, curr_dir))
+        travel_dirs = travels[(row, col)]
+        merp[row][col] = map_symbol(travel_dirs, curr_dir)
+        travels[(row, col)].add(curr_dir)
+        next_row, next_col = next_pos(row, col, curr_dir)
+        if next_row < 0 or next_col < 0 or next_row >= n or next_col >= m:
+            break
+        if merp[next_row][next_col] == '#':
+            row, col, curr_dir = row, col, turn(curr_dir)
+        else:
+            row, col = next_row, next_col
 
-
-    with open('dayy6.txt', 'w') as file:
+    # result for problem 1, and visualized guard path
+    print(f"Guard traveled through {len(travels)} distinct positions")
+    print(f"Guard path visualized in guard_path.txt")
+    with open('guard_path.txt', 'w') as file:
+        merp[start_row][start_col] = '^'
         s = ""
         for l in merp:
             s += ''.join(l) + '\n'
         file.write(s)
-    with open('dayyy6.txt', 'w') as file:
+
+    print(guard_path)
+    # try placing an obstacle at every position through guard path
+    row, col, curr_dir = start_row, start_col, '^'
+    obstacle_count = 0
+    attempted = set()
+    obstacle_merp = copy.deepcopy(merp)
+    for row, col, curr_dir in guard_path:
+        next_row, next_col = next_pos(row, col, curr_dir)
+        # obstacle is in the map, is not already an obstacle, was not already attempted, is not at the guard's starting position, and causes a loop.
+        if 0 <= next_row < n and 0 <= next_col < m and merp[next_row][next_col] != '#' and (next_row, next_col) not in attempted and (next_row, next_col) != (start_row, start_col) and curr_pos_loops(row, col, curr_dir, merp, n, m, next_row, next_col):
+            obstacle_count += 1
+            obstacle_merp[next_row][next_col] = 'O'
+        attempted.add((next_row, next_col))
+
+    print(f"{obstacle_count} positions in the map can lead to a loop.")
+    print(f"All looping obstacle positions visualized in loop_obstacles.txt")
+    with open('loop_obstacles.txt', 'w') as file:
+        obstacle_merp[start_row][start_col] = '^'
         s = ""
-        for l in merp2:
+        for l in obstacle_merp:
             s += ''.join(l) + '\n'
         file.write(s)
-    return count, count2
-
-
+        
 if __name__ == "__main__":
     with open('day6.txt', 'r') as file:
         merp = [list(l) for  l in file.read().splitlines()]
-        res1, res2 = problem1(merp)
-        print("result 1: ", res1)
-        print("result 2: ", res2)
+        solve(merp)

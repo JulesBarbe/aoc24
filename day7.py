@@ -62,39 +62,6 @@ def problem2(lines):
                 stack.append((curr_index + 1, res3, curr_op + f"||{new_val}"))
     return sum
 
-    #     res1 = values[0] + values[1]
-    #     res2 = values[0] * values[1]
-    #     res3 = int(str(values[0]) + str(values[1]))
-    #     if res in (res1, res2, res3) and len(values) == 2:
-    #         sum += res
-    #         continue
-    #     # (next value index, result, operation up to now)
-    #     stack.append((2, res1, f"{values[0]}+{values[1]}"))
-    #     stack.append((2, res2, f"{values[0]}*{values[1]}"))
-    #     stack.append((2, res3, f"{values[0]}||{values[1]}"))
-    #     while stack:
-    #         curr = stack.pop()
-    #         curr_index = curr[0]
-    #         curr_res = curr[1]
-    #         if curr_index >= n:
-    #             continue
-    #         new_val = values[curr_index]
-    #         res1 = curr_res + new_val
-    #         res2 = curr_res * new_val
-    #         res3 = int(str(curr_res) + str(new_val))
-    #         if res in (res1, res2, res3) and curr_index == n-1:
-    #             # print(f"{curr} -> {new_val}, {len(values)}")
-    #             sum += res
-    #             break
-    #         if res1 < res:
-    #             stack.append((curr_index + 1, res1, curr[2] + f"+{new_val}"))
-    #         if res2 < res:
-    #             stack.append((curr_index + 1, res2, curr[2] + f"*{new_val}"))
-    #         if res3 < res:
-    #             stack.append((curr_index + 1, res3, curr[2] + f"||{new_val}"))
-    # return sum
-
-
 if __name__ == "__main__":
     with open('day7.txt', 'r') as file:
         lines = file.read().splitlines()
